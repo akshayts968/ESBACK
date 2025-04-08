@@ -156,7 +156,7 @@ app.post("/cart", async (req, res) => {
         }
 
         await item.save();
-        //sendEmail("Cart Updated", `User ${userId}: ${product.name} (ID: ${productId}) added with quantity ${quantity}.`);
+        sendEmail("Cart Updated", `User ${userId}: ${product.name} (ID: ${productId}) added with quantity ${quantity}.`);
 
         res.json(await Cart.find({ userId }).populate("productId"));
     } catch (err) {
@@ -180,7 +180,7 @@ app.put("/cart/update", async (req, res) => {
             await item.save();
         }
 
-        //sendEmail("Cart Updated", action);
+        sendEmail("Cart Updated", action);
 
         res.json(await Cart.find({ userId }).populate("productId"));
     } catch (err) {
