@@ -7,7 +7,8 @@ const jwt = require("jsonwebtoken");
 const session = require("express-session");
 const MongoDBStore = require('connect-mongodb-session')(session);
 const nodemailer = require("nodemailer");
-
+const Razorpay = require('razorpay');
+const crypto = require("crypto");
 const app = express();
 app.use(express.json());
 
@@ -18,6 +19,11 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 const EmailPass = process.env.EmailPass;
 const SendEmail = process.env.SendEmail;
 const RecieveEmail = process.env.RecieveEmail;
+
+const KEY = process.env.KEY_ID;
+const KEY_S=process.env.KEY_SECRET;
+console.log("KEY_ID:", process.env.KEY_ID);
+console.log("KEY_SECRET:", process.env.KEY_SECRET);
 
 // CORS Middleware
 app.use(cors({
@@ -204,6 +210,41 @@ app.delete("/cart/clear/:userId", async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: "Failed to clear cart" });
     }
+});
+
+
+const razorpay = new Razorpay({
+  key_id: KEY,
+  key_secret: KEY_S,
+});
+
+app.post("/create-order", async (req, res) => {
+  const { amount } = req.body;
+  const order = await razorpay.orders.create({
+    amount,
+    currency: "INR",
+    receipt: "receipt#" + Date.now(),
+  });
+  res.json(order);
+});
+
+app.post("/verify-payment", (req, res) => {
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+  } = req.body;
+
+  const generatedSignature = crypto
+    .createHmac("sha256", KEY_S)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest("hex");
+
+  if (generatedSignature === razorpay_signature) {
+    res.json({ success: true, message: "Payment verified successfully" });
+  } else {
+    res.status(400).json({ success: false, message: "Payment verification failed" });
+  }
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
