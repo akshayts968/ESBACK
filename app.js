@@ -22,8 +22,7 @@ const RecieveEmail = process.env.RecieveEmail;
 
 const KEY = process.env.KEY_ID;
 const KEY_S=process.env.KEY_SECRET;
-console.log("KEY_ID:", process.env.KEY_ID);
-console.log("KEY_SECRET:", process.env.KEY_SECRET);
+
 
 // CORS Middleware
 app.use(cors({
